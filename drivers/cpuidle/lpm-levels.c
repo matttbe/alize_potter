@@ -699,13 +699,13 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		(uint32_t)(ktime_to_us(tick_nohz_get_sleep_length()));
 	uint32_t modified_time_us = 0;
 	uint32_t next_event_us = 0;
-	int i, idx_restrict;
+	int i;
 	uint32_t lvl_latency_us = 0;
-	uint64_t predicted = 0;
 	uint32_t htime = 0, idx_restrict_time = 0;
 	uint32_t next_wakeup_us = sleep_us;
 	uint32_t *min_residency = get_per_cpu_min_residency(dev->cpu);
 	uint32_t *max_residency = get_per_cpu_max_residency(dev->cpu);
+	uint32_t *residency = get_per_cpu_max_residency(dev->cpu);
 
 	if (!cpu)
 		return -EINVAL;
@@ -728,6 +728,9 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		if (!allow)
 			continue;
 
+		if (i > 0 && suspend_in_progress)
+			continue;
+
 		lvl_latency_us = pwr_params->latency_us;
 
 		if (latency_us < lvl_latency_us)
@@ -742,36 +745,16 @@ static int cpu_power_select(struct cpuidle_device *dev,
 				next_wakeup_us = next_event_us - lvl_latency_us;
 		}
 
-		if (!i) {
-			/*
-			 * If the next_wake_us itself is not sufficient for
-			 * deeper low power modes than clock gating do not
-			 * call prediction.
-			 */
-			if (next_wakeup_us > max_residency[i]) {
-				predicted = lpm_cpuidle_predict(dev, cpu,
-					&idx_restrict, &idx_restrict_time);
-				if (predicted < min_residency[i])
-					predicted = 0;
-			} else
-				invalidate_predict_history(dev);
+		if (next_wakeup_us <= residency[i]) {
+			best_level = i;
+			if (next_event_us && next_event_us < sleep_us &&
+				(mode != MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT))
+				modified_time_us
+					= next_event_us - lvl_latency_us;
+			else
+				modified_time_us = 0;
+			break;
 		}
-
-		if (i >= idx_restrict)
-			break;
-
-		best_level = i;
-
-		if (next_event_us && next_event_us < sleep_us &&
-			(mode != MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT))
-			modified_time_us
-				= next_event_us - lvl_latency_us;
-		else
-			modified_time_us = 0;
-
-		if (predicted ? (predicted <= max_residency[i])
-			: (next_wakeup_us <= max_residency[i]))
-			break;
 	}
 
 	if (modified_time_us)
@@ -1087,11 +1070,10 @@ static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
 		if (level->notify_rpm && msm_rpm_waiting_for_ack())
 			continue;
 
-		best_level = i;
-
-		if (predicted ? (pred_us <= pwr_params->max_residency)
-			: (sleep_us <= pwr_params->max_residency))
+		if (sleep_us <= pwr_params->max_residency) {
+			best_level = i;
 			break;
+		}
 	}
 
 	if ((best_level == (cluster->nlevels - 1)) && (pred_mode == 2))

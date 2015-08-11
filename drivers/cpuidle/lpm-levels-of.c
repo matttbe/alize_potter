@@ -80,14 +80,6 @@ static void set_optimum_cpu_residency(struct lpm_cpu *cpu, int cpu_id,
 	for (i = 0; i < cpu->nlevels; i++) {
 		struct power_params *pwr = &cpu->levels[i].pwr;
 
-		mode_avail = probe_time ||
-			lpm_cpu_mode_allow(cpu_id, i, true);
-
-		if (!mode_avail) {
-			residency[i] = 0;
-			continue;
-		}
-
 		residency[i] = ~0;
 		for (j = i + 1; j < cpu->nlevels; j++) {
 			mode_avail = probe_time ||
@@ -110,19 +102,11 @@ static void set_optimum_cluster_residency(struct lpm_cluster *cluster,
 	for (i = 0; i < cluster->nlevels; i++) {
 		struct power_params *pwr = &cluster->levels[i].pwr;
 
-		mode_avail = probe_time ||
-			lpm_cluster_mode_allow(cluster, i,
-					true);
-
-		if (!mode_avail) {
-			pwr->max_residency = 0;
-			continue;
-		}
-
 		pwr->max_residency = ~0;
-		for (j = i+1; j < cluster->nlevels; j++) {
-			mode_avail = probe_time ||
-					lpm_cluster_mode_allow(cluster, j,
+		for (j = 0; j < cluster->nlevels; j++) {
+			if (i >= j)
+				mode_avail = probe_time ||
+					lpm_cluster_mode_allow(cluster, i,
 							true);
 			if (mode_avail &&
 				(pwr->max_residency > pwr->residencies[j]) &&
@@ -598,6 +582,7 @@ static int parse_cluster_level(struct device_node *node,
 
 	key = "parse_power_params";
 	ret = parse_power_params(node, &level->pwr);
+
 	if (ret)
 		goto failed;
 
@@ -717,17 +702,16 @@ static int calculate_residency(struct power_params *base_pwr,
 		((int32_t)(next_pwr->ss_power * next_pwr->time_overhead_us)
 		- (int32_t)(base_pwr->ss_power * base_pwr->time_overhead_us));
 
-	if (base_pwr->ss_power != next_pwr->ss_power)
-		residency /= (int32_t)(base_pwr->ss_power  - next_pwr->ss_power);
+	residency /= (int32_t)(base_pwr->ss_power  - next_pwr->ss_power);
 
 	if (residency < 0) {
-		pr_err("%s: residency < 0 for LPM\n",
+		__WARN_printf("%s: Incorrect power attributes for LPM\n",
 				__func__);
-		return next_pwr->time_overhead_us;
+		return 0;
 	}
 
-	return residency < next_pwr->time_overhead_us ?
-				next_pwr->time_overhead_us : residency;
+	return residency < base_pwr->time_overhead_us ?
+				base_pwr->time_overhead_us : residency;
 }
 
 static int parse_cpu_levels(struct device_node *node, struct lpm_cluster *c)
@@ -790,6 +774,21 @@ static int parse_cpu_levels(struct device_node *node, struct lpm_cluster *c)
 			l->reset_level = LPM_RESET_LVL_NONE;
 		else if (ret)
 			goto failed;
+	}
+	for (i = 0; i < c->cpu->nlevels; i++) {
+		for (j = 0; j < c->cpu->nlevels; j++) {
+			if (i >= j) {
+				c->cpu->levels[i].pwr.residencies[j] = 0;
+				continue;
+			}
+
+			c->cpu->levels[i].pwr.residencies[j] =
+				calculate_residency(&c->cpu->levels[i].pwr,
+					&c->cpu->levels[j].pwr);
+
+			pr_err("%s: idx %d %u\n", __func__, j,
+					c->cpu->levels[i].pwr.residencies[j]);
+		}
 	}
 	for (i = 0; i < c->cpu->nlevels; i++) {
 		for (j = 0; j < c->cpu->nlevels; j++) {
