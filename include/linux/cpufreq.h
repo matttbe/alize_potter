@@ -519,6 +519,9 @@ extern struct cpufreq_governor cpufreq_gov_zzmoove;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_OPTIMUS)
 extern struct cpufreq_governor cpufreq_gov_optimus;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_optimus)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_FRANKENSTEIN)
+extern struct cpufreq_governor cpufreq_gov_frankenstein;
+#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_frankenstein)
 #endif
 
 /*********************************************************************
