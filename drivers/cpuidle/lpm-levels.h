@@ -30,6 +30,7 @@ struct power_params {
 	uint32_t energy_overhead;	/* Enter + exit over head */
 	uint32_t time_overhead_us;	/* Enter + exit overhead */
 	uint32_t residencies[NR_LPM_LEVELS];
+	uint32_t min_residency;
 	uint32_t max_residency;
 };
 
