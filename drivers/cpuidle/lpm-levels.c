@@ -699,8 +699,9 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		(uint32_t)(ktime_to_us(tick_nohz_get_sleep_length()));
 	uint32_t modified_time_us = 0;
 	uint32_t next_event_us = 0;
-	int i;
+	int i, idx_restrict;
 	uint32_t lvl_latency_us = 0;
+	uint64_t predicted = 0;
 	uint32_t htime = 0, idx_restrict_time = 0;
 	uint32_t next_wakeup_us = sleep_us;
 	uint32_t *min_residency = get_per_cpu_min_residency(dev->cpu);
@@ -1076,9 +1077,9 @@ static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
 		 * if none of the previous levels are enabled,
 		 * min_residency is time overhead for current level
 		 */
-		if (sleep_us >= pwr_params->min_residency) {
+		if (predicted ? (pred_us >= pwr_params->min_residency)
+			: (sleep_us >= pwr_params->min_residency))
 			best_level = i;
-		}
 	}
 
 	if ((best_level == (cluster->nlevels - 1)) && (pred_mode == 2))
