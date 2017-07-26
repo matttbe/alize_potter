@@ -62,4 +62,3 @@ rm -rf $ANY_KERNEL2_DIR/$FINAL_KERNEL_ZIP
 rm -rf AnyKernel2/zImage
 rm -rf AnyKernel2/dtb
 
-
