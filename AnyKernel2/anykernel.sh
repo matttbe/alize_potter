@@ -31,7 +31,6 @@ chmod -R 755 $ramdisk
 dump_boot;
 
 # begin ramdisk changes
-insert_line init.qcom.rc "init.alize.rc" after "import init.target.rc" "import init.alize.rc";
 
 # end ramdisk changes
 
