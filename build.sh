@@ -13,7 +13,7 @@ KERNEL_DEFCONFIG=potter_defconfig
 DTBTOOL=$KERNEL_DIR/Dtbtool/
 JOBS=3
 ANY_KERNEL2_DIR=$KERNEL_DIR/AnyKernel2/
-FINAL_KERNEL_ZIP=Alize_four.zip
+FINAL_KERNEL_ZIP=Alize_vFive.zip
 
 # The MAIN Part
 echo "**** Setting Toolchain ****"
