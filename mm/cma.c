@@ -371,12 +371,8 @@ err:
  * This function allocates part of contiguous memory on specific
  * contiguous memory area.
  */
-<<<<<<< HEAD
 
-struct page *cma_alloc(struct cma *cma, unsigned int count, unsigned int align)
-=======
 struct page *cma_alloc(struct cma *cma, size_t count, unsigned int align)
->>>>>>> f0c8d9367c92... mm: cma: fix incorrect type conversion for size during dma allocation
 {
 	unsigned long mask, offset, pfn, start = 0;
 	unsigned long bitmap_maxno, bitmap_no, bitmap_count;
