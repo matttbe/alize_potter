@@ -154,7 +154,14 @@ config CPU_FREQ_DEFAULT_GOV_BARRY_ALLEN
 	  loading your cpufreq low-level hardware driver, using the
 	  'barry_allen' governor for latency-sensitive workloads.
 
+config CPU_FREQ_DEFAULT_GOV_ZZMOOVE
+	bool "zzmoove"
+	select CPU_FREQ_GOV_ZZMOOVE
+
 endchoice
+
+config CPU_FREQ_GOV_ZZMOOVE
+	tristate "'zzmoove' governor"
 
 config CPU_FREQ_GOV_PERFORMANCE
 	tristate "'performance' governor"

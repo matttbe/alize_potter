@@ -31,13 +31,7 @@
 // ZZ: disable kernel power management
 // #define DISABLE_POWER_MANAGEMENT
 
-// AP: use msm8974 lcd status notifier
-#define USE_LCD_NOTIFIER
-
 #include <linux/cpu.h>
-#ifdef USE_LCD_NOTIFIER
-#include <linux/lcd_notify.h>
-#endif /* USE_LCD_NOTIFIER */
 #include <linux/cpufreq.h>
 #if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(DISABLE_POWER_MANAGEMENT)
 #include <linux/earlysuspend.h>
@@ -78,10 +72,10 @@
 #define ZZMOOVE_VERSION "develop"
 
 // ZZ: support for 2,4,6 or 8 cores (this will enable/disable hotplug threshold tuneables and limit hotplug max limit tuneable)
-#define MAX_CORES					(4)
+#define MAX_CORES					(8)
 
 // ZZ: enable/disable hotplug support
-// #define ENABLE_HOTPLUGGING
+#define ENABLE_HOTPLUGGING
 
 // ZZ: enable support for native hotplugging on snapdragon platform
 // #define SNAP_NATIVE_HOTPLUGGING
@@ -101,7 +95,7 @@
 // ZZ: include profiles header file and set name for 'custom' profile (informational for a changed profile value)
 #ifdef ENABLE_PROFILES_SUPPORT
 #include "cpufreq_zzmoove_profiles.h"
-#define DEF_PROFILE_NUMBER				(0)	// ZZ: default profile number (profile = 0 = 'none' = tuneable mode)
+#define DEF_PROFILE_NUMBER				(9)	// ZZ: default profile number (profile = 0 = 'none' = tuneable mode)
 static char custom_profile[20] = "custom";			// ZZ: name to show in sysfs if any profile value has changed
 
 // ff: allows tuneables to be tweaked without reverting to "custom" profile
@@ -193,7 +187,7 @@ static char custom_profile[20] = "custom";			// ZZ: name to show in sysfs if any
 
 // ZZ: sampling rate idle and sampling down momentum tuneable defaults
 #define DEF_SAMPLING_RATE_IDLE_THRESHOLD		(0)	// ZZ: default sampling rate idle threshold
-#define DEF_SAMPLING_RATE_IDLE				(180000)// ZZ: default sampling rate idle (must not be 0!)
+#define DEF_SAMPLING_RATE_IDLE				(1036000)// ZZ: default sampling rate idle (must not be 0!)
 #define DEF_SAMPLING_RATE_IDLE_DELAY			(0)	// ZZ: default sampling rate idle delay
 #define DEF_SAMPLING_DOWN_FACTOR			(1)	// ZZ: default sampling down factor (stratosk default = 4) here disabled by default
 #define MAX_SAMPLING_DOWN_FACTOR			(100000)// ZZ: changed from 10 to 100000 for sampling down momentum implementation
@@ -274,7 +268,7 @@ static char custom_profile[20] = "custom";			// ZZ: name to show in sysfs if any
 #define DEF_MUSIC_MAX_FREQ				(0)	// ff: default maximum freq to maintain while music is on
 #define DEF_MUSIC_MIN_FREQ				(0)	// ff: default minimum freq to maintain while music is on
 #ifdef ENABLE_HOTPLUGGING
-#define DEF_MUSIC_MIN_CORES				(2)	// ZZ: default minimum cores online while music is on
+#define DEF_MUSIC_MIN_CORES				(1)	// ZZ: default minimum cores online while music is on
 #endif /* ENABLE_HOTPLUGGING */
 #endif /* ENABLE_MUSIC_LIMITS */
 
