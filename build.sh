@@ -13,7 +13,7 @@ KERNEL_DEFCONFIG=potter_defconfig
 DTBTOOL=$KERNEL_DIR/Dtbtool/
 JOBS=3
 ANY_KERNEL2_DIR=$KERNEL_DIR/AnyKernel2/
-FINAL_KERNEL_ZIP=Alize_vFive.zip
+FINAL_KERNEL_ZIP=Alize_vTen.zip
 
 # The MAIN Part
 echo "**** Setting Toolchain ****"
@@ -52,8 +52,8 @@ cp $KERNEL_DIR/arch/arm/boot/dtb $ANY_KERNEL2_DIR/
 echo "**** Time to zip up! ****"
 cd $ANY_KERNEL2_DIR/
 zip -r9 $FINAL_KERNEL_ZIP * -x README $FINAL_KERNEL_ZIP
-rm -rf $KERNEL_DIR/Builds/$FINAL_KERNEL_ZIP
-cp $KERNEL_DIR/AnyKernel2/$FINAL_KERNEL_ZIP $KERNEL_DIR/Builds/$FINAL_KERNEL_ZIP
+rm -rf $KERNEL_DIR/Builds/Nougat/$FINAL_KERNEL_ZIP
+cp $KERNEL_DIR/AnyKernel2/$FINAL_KERNEL_ZIP $KERNEL_DIR/Builds/Nougat/$FINAL_KERNEL_ZIP
 
 echo "**** Good Bye!! ****"
 cd $KERNEL_DIR
