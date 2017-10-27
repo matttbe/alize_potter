@@ -4,7 +4,7 @@ before_script:
   - apt-get update --quiet
   - apt-get install --yes build-essential gcc-multilib bc kernel-package libncurses5-dev bzip2 liblz4-tool git
   - git clone https://gitlab.com/alize_kernel/toolchain.git
-  - git clone https://gitlab.com/alize_kernel/Assets.git A; shopt -s dotglob nullglob; mv A/* .; rmdir A
+  - git clone https://gitlab.com/alize_kernel/Assets.git A; shopt -s dotglob nullglob; cd A; rm -rf .git; cd ..; mv A/* .; rmdir A
   - chmod +x build.sh
   - mkdir Builds
   - cd Builds
