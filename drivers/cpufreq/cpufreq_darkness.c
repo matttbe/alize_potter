@@ -247,7 +247,7 @@ static bool update_load(int cpu)
 		pcpu->load = 0;
 		ignore = true;
 	} else {
-		pcpu->load = (100 * (delta_time - delta_idle)) / delta_time;
+		pcpu->load = div_u64(100 * (delta_time - delta_idle), delta_time);
 	}
 	pcpu->time_in_idle = now_idle;
 	pcpu->time_in_idle_timestamp = now;
@@ -255,7 +255,7 @@ static bool update_load(int cpu)
 	return ignore;
 }
 
-static void cpufreq_darkness_timer(unsigned long data)
+static void cpufreq_darkness_timer(unsigned long data, struct cpufreq_darkness_tunables *tunables)
 {
 	struct cpufreq_darkness_policyinfo *ppol = per_cpu(polinfo, data);
 #ifdef CONFIG_STATE_NOTIFIER
