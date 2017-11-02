@@ -133,7 +133,7 @@ struct cpufreq_frankenstein_tunables {
 
 /* For cases where we have single governor instance for system */
 static struct cpufreq_frankenstein_tunables *common_tunables;
-static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
+struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
@@ -902,7 +902,7 @@ static ssize_t store_hispeed_freq(struct cpufreq_frankenstein_tunables *tunables
 	int ret;
 	long unsigned int val;
 
-	ret = strict_strtoul(buf, 0, &val);
+	ret = kstrtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
 	tunables->hispeed_freq = val;
@@ -921,7 +921,7 @@ static ssize_t store_go_hispeed_load(struct cpufreq_frankenstein_tunables
 	int ret;
 	unsigned long val;
 
-	ret = strict_strtoul(buf, 0, &val);
+	ret = kstrtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
 	tunables->go_hispeed_load = val;
@@ -959,7 +959,7 @@ static ssize_t store_min_sample_time(struct cpufreq_frankenstein_tunables
 	int ret;
 	unsigned long val;
 
-	ret = strict_strtoul(buf, 0, &val);
+	ret = kstrtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
 	tunables->min_sample_time = val;
@@ -978,7 +978,7 @@ static ssize_t store_timer_rate(struct cpufreq_frankenstein_tunables *tunables,
 	int ret;
 	unsigned long val;
 
-	ret = strict_strtoul(buf, 0, &val);
+	ret = kstrtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
 	tunables->timer_rate = val;
@@ -1531,7 +1531,7 @@ static void cpufreq_frankenstein_nop_timer(unsigned long data)
 {
 }
 
-static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy)
+struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy)
 {
 	if (have_governor_per_policy())
 		return &policy->kobj;
