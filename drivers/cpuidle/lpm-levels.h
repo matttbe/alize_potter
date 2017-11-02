@@ -142,6 +142,7 @@ bool lpm_cpu_mode_allow(unsigned int cpu,
 bool lpm_cluster_mode_allow(struct lpm_cluster *cluster,
 		unsigned int mode, bool from_idle);
 uint32_t *get_per_cpu_max_residency(int cpu);
+uint32_t *get_per_cpu_min_residency(int cpu);
 extern struct lpm_cluster *lpm_root_node;
 
 #ifdef CONFIG_SMP
