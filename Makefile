@@ -409,10 +409,11 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-                    -mfpu=neon-vfpv4 -marm -munaligned-access \
-                    -fmodulo-sched -fmodulo-sched-allow-regmoves \
+                   -mfpu=neon-vfpv4 -marm -munaligned-access \
+                   -fmodulo-sched -fmodulo-sched-allow-regmoves \
 		   -fno-aggressive-loop-optimizations \
-		   -std=gnu89
+		   -std=gnu89 \
+		   -mcpu=cortex-a53 -mtune=cortex-a53
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
