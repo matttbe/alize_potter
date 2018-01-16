@@ -39,6 +39,8 @@ CONFIG_BUILDTIME_EXTABLE_SORT=y
 # Kernel features
 #
 CONFIG_FRANDOM=y
+CONFIG_IOSCHED_MAPLE=y
+# CONFIG_DEFAULT_MAPLE is not set
 
 #
 # General setup
