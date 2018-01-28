@@ -66,7 +66,7 @@ int tcp_use_userconfig_sysctl_handler(struct ctl_table *table, int write,
 	return ret;
 }
 
-static void tcp_write_err(struct sock *sk)
+void tcp_write_err(struct sock *sk)
 {
 	sk->sk_err = sk->sk_err_soft ? : ETIMEDOUT;
 	sk->sk_error_report(sk);
