@@ -4535,7 +4535,7 @@ queue_and_out:
 
 		if (eaten > 0)
 			kfree_skb_partial(skb, fragstolen);
-			if (!sock_flag(sk, SOCK_DEAD) || mptcp(tp))
+		if (!sock_flag(sk, SOCK_DEAD) || mptcp(tp))
 				/* MPTCP: we always have to call data_ready, because
 			 	* we may be about to receive a data-fin, which still
 			 	* must get queued.
@@ -4888,8 +4888,11 @@ static void tcp_check_space(struct sock *sk)
 {
 	if (sock_flag(sk, SOCK_QUEUE_SHRUNK)) {
 		sock_reset_flag(sk, SOCK_QUEUE_SHRUNK);
+		/* pairs with tcp_poll() */
+		smp_mb();
 		if (mptcp(tcp_sk(sk)) ||
-+		    (sk->sk_socket &&
+		    (sk->sk_socket &&
+			test_bit(SOCK_NOSPACE, &sk->sk_socket->flags)))
 			tcp_new_space(sk);
 	}
 }

@@ -1245,83 +1245,81 @@ int tcp_fragment(struct sock *sk, struct sk_buff *skb, u32 len,
  * eventually). The difference is that pulled data not copied, but
  * immediately discarded.
  */
-void __pskb_trim_head(struct sk_buff *skb, int len)
-{
-	struct skb_shared_info *shinfo;
-	int i, k, eat;
+ /* This is similar to __pskb_pull_head() (it will go to core/skbuff.c
+  * eventually). The difference is that pulled data not copied, but
+  * immediately discarded.
+  */
+ void __pskb_trim_head(struct sk_buff *skb, int len)
+ {
+ 	struct skb_shared_info *shinfo;
+ 	int i, k, eat;
 
-	eat = min_t(int, len, skb_headlen(skb));
-	if (eat) {
-		__skb_pull(skb, eat);
-		len -= eat;
-		if (!len)
-			return 0;
-	}
-	eat = len;
-	k = 0;
-	shinfo = skb_shinfo(skb);
-	for (i = 0; i < shinfo->nr_frags; i++) {
-		int size = skb_frag_size(&shinfo->frags[i]);
+ 	eat = min_t(int, len, skb_headlen(skb));
+ 	if (eat) {
+ 		__skb_pull(skb, eat);
+ 		len -= eat;
+ 		if (!len)
+ 			return;
+ 	}
+ 	eat = len;
+ 	k = 0;
+ 	shinfo = skb_shinfo(skb);
+ 	for (i = 0; i < shinfo->nr_frags; i++) {
+ 		int size = skb_frag_size(&shinfo->frags[i]);
 
-		if (size <= eat) {
-			skb_frag_unref(skb, i);
-			eat -= size;
-		} else {
-			shinfo->frags[k] = shinfo->frags[i];
-			if (eat) {
-				shinfo->frags[k].page_offset += eat;
-				skb_frag_size_sub(&shinfo->frags[k], eat);
-				eat = 0;
-			}
-			k++;
-		}
-	}
-	shinfo->nr_frags = k;
+ 		if (size <= eat) {
+ 			skb_frag_unref(skb, i);
+ 			eat -= size;
+ 		} else {
+ 			shinfo->frags[k] = shinfo->frags[i];
+ 			if (eat) {
+ 				shinfo->frags[k].page_offset += eat;
+ 				skb_frag_size_sub(&shinfo->frags[k], eat);
+ 				eat = 0;
+ 			}
+ 			k++;
+ 		}
+ 	}
+ 	shinfo->nr_frags = k;
 
-	skb_reset_tail_pointer(skb);
-	skb->data_len -= len;
-	skb->len = skb->data_len;
-	return len;
-}
+ 	skb_reset_tail_pointer(skb);
+ 	skb->data_len -= len;
+ 	skb->len = skb->data_len;
+ }
 
-/* Remove acked data from a packet in the transmit queue. */
-int tcp_trim_head(struct sock *sk, struct sk_buff *skb, u32 len)
-{
-	u32 delta_truesize;
+ /* Remove acked data from a packet in the transmit queue. */
+ int tcp_trim_head(struct sock *sk, struct sk_buff *skb, u32 len)
+ {
+ 	if (mptcp(tcp_sk(sk)) && !is_meta_sk(sk) && mptcp_is_data_seq(skb))
+ 		return mptcp_trim_head(sk, skb, len);
 
-	if (mptcp(tcp_sk(sk)) && !is_meta_sk(sk) && mptcp_is_data_seq(skb))
-		return mptcp_trim_head(sk, skb, len);
+ 	if (skb_unclone(skb, GFP_ATOMIC))
+ 		return -ENOMEM;
 
+ 	__pskb_trim_head(skb, len);
 
-	if (skb_unclone(skb, GFP_ATOMIC))
-		return -ENOMEM;
+ 	TCP_SKB_CB(skb)->seq += len;
+ 	skb->ip_summed = CHECKSUM_PARTIAL;
 
-	delta_truesize = __pskb_trim_head(skb, len);
+ 	skb->truesize	     -= len;
+ 	sk->sk_wmem_queued   -= len;
+ 	sk_mem_uncharge(sk, len);
+ 	sock_set_flag(sk, SOCK_QUEUE_SHRUNK);
 
-	TCP_SKB_CB(skb)->seq += len;
-	skb->ip_summed = CHECKSUM_PARTIAL;
+ 	/* Any change of skb->len requires recalculation of tso factor. */
+ 	if (tcp_skb_pcount(skb) > 1)
+ 		tcp_set_skb_tso_segs(sk, skb, tcp_skb_mss(skb));
 
-	if (delta_truesize) {
-		skb->truesize	   -= delta_truesize;
-		sk->sk_wmem_queued -= delta_truesize;
-		sk_mem_uncharge(sk, delta_truesize);
-		sock_set_flag(sk, SOCK_QUEUE_SHRUNK);
-	}
+ #ifdef CONFIG_MPTCP
+ 	/* Some data got acked - we assume that the seq-number reached the dest.
+ 	 * Anyway, our MPTCP-option has been trimmed above - we lost it here.
+ 	 * Only remove the SEQ if the call does not come from a meta retransmit.
+ 	 */
+ 	if (mptcp(tcp_sk(sk)) && !is_meta_sk(sk))
+ 		TCP_SKB_CB(skb)->mptcp_flags &= ~MPTCPHDR_SEQ;
+ #endif
 
-	/* Any change of skb->len requires recalculation of tso factor. */
-	if (tcp_skb_pcount(skb) > 1)
-		tcp_set_skb_tso_segs(sk, skb, tcp_skb_mss(skb));
-
-#ifdef CONFIG_MPTCP
-	/* Some data got acked - we assume that the seq-number reached the dest.
-	 * Anyway, our MPTCP-option has been trimmed above - we lost it here.
-	 * Only remove the SEQ if the call does not come from a meta retransmit.
-	 */
-	if (mptcp(tcp_sk(sk)) && !is_meta_sk(sk))
-		TCP_SKB_CB(skb)->mptcp_flags &= ~MPTCPHDR_SEQ;
-#endif
-
-	return 0;
+ 	return 0;
 }
 
 /* Calculate MSS not accounting any TCP options.  */
